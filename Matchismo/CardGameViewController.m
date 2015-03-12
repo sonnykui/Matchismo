@@ -41,7 +41,8 @@
 
 - (IBAction)touchResetButton:(UIButton *)sender
 {
-    
+    [self.game resetScore];
+    [self updateUI];
 }
 
 - (IBAction)touchCardButton:(UIButton *)sender
