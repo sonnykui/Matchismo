@@ -44,6 +44,7 @@
 - (IBAction)touchResetButton:(UIButton *)sender
 {
     [self.game resetGame];
+    [self.switchButton setEnabled:YES];
     [self updateUI];
 }
 
@@ -51,6 +52,9 @@
 {
     int cardIndex = [self.cardButtons indexOfObject:sender];
     [self.game chooseCardAtIndex:cardIndex];
+
+    [self.switchButton setEnabled:NO];
+
     [self updateUI];
 }
 
