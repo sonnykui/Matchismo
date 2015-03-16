@@ -17,6 +17,8 @@
 @property (nonatomic, strong) CardMatchingGame *game;
 @property (weak, nonatomic) IBOutlet UILabel *scoreLabel;
 @property (strong, nonatomic) IBOutlet UIButton *resetButton;
+@property (strong, nonatomic) IBOutlet UISwitch *switchButton;
+@property (strong, nonatomic) IBOutlet UILabel *switchLabel;
 
 @property (strong, nonatomic) IBOutletCollection(UIButton) NSArray *cardButtons;
 
@@ -52,6 +54,11 @@
     [self updateUI];
 }
 
+- (IBAction)toggleSwitchButton:(UISwitch *)sender {
+    [self.game toggleMatchMode];
+    [self updateUI];
+}
+
 - (void)updateUI
 {
     for (UIButton *cardButton in self.cardButtons) {
@@ -63,6 +70,7 @@
                               forState:UIControlStateNormal];
         cardButton.enabled = !card.isMatched;
     }
+    self.switchLabel.text = [NSString stringWithFormat:@"Match %i", self.game.isMatchMode3 ? 3 : 2];
     self.scoreLabel.text = [NSString stringWithFormat:@"Score: %d", self.game.score];
 }
 

@@ -17,7 +17,9 @@
 - (void)chooseCardAtIndex:(NSInteger)index;
 - (Card *)cardAtIndex:(NSUInteger)index;
 - (void)resetGame;
+- (void)toggleMatchMode;
 
 @property (nonatomic, readonly) NSInteger score;
+@property (nonatomic, getter=isMatchMode3) BOOL matchMode3;
 
 @end
