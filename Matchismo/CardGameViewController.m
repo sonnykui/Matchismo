@@ -74,7 +74,7 @@
                               forState:UIControlStateNormal];
         cardButton.enabled = !card.isMatched;
     }
-    self.switchLabel.text = [NSString stringWithFormat:@"Match %i", self.game.isMatchMode3 ? 3 : 2];
+    self.switchLabel.text = [NSString stringWithFormat:@"Match %i", self.game.numberMatchMode];
     self.scoreLabel.text = [NSString stringWithFormat:@"Score: %d", self.game.score];
 }
 

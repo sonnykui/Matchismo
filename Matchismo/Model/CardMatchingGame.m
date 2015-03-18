@@ -11,6 +11,7 @@
 @interface CardMatchingGame()
 @property (nonatomic, readwrite) NSInteger score;
 @property (nonatomic, strong) NSMutableArray *cards; // of Card
+@property (nonatomic, readwrite) NSInteger numberMatchMode;
 @end
 
 @implementation CardMatchingGame
@@ -36,7 +37,7 @@
             
         }
     }
-    self.matchMode3 = NO;
+    self.numberMatchMode = MATCH_MODE_DEFAULT;
     return self;
 }
 
@@ -45,64 +46,47 @@
 static const int MISMATCH_PENALTY = 2;
 static const int MATCH_BONUS = 4;
 static const int COST_TO_CHOOSE = 1;
-static const int MATCH_MODE_3_BONUS = 10;
+static const int MATCH_MODE_BONUS = 10;
+static const int MATCH_MODE_DEFAULT = 2;
+static const int MATCH_MODE_NUMBER = 3;
 
 - (void)chooseCardAtIndex:(NSInteger)index
 {
     Card *card = [self cardAtIndex:index];
-    
 
     if (!card.isMatched) {
-        if (card.isChosen) {
-            card.chosen = NO;
-        } else {
-            // match against another card
+        
+        card.chosen = YES;
+        
+        self.score -= COST_TO_CHOOSE;
+        
+        int numberOfCardsChosen = [self findNumberCardsChosen];
+        
+        if (numberOfCardsChosen < self.numberMatchMode) return;
 
-            BOOL firstPairChecked = NO;
-            
-            for (Card *otherCard in self.cards) {
-                if (otherCard.isChosen && !otherCard.isMatched) {
+        int matchScore = 0;
+        BOOL isMatched = NO;
+        
+        for (Card *otherCard in self.cards) {
+            if (otherCard.isChosen && !otherCard.isMatched) {
+                
+                matchScore += [card match:@[otherCard]];
+                if (matchScore) {
                     
-                    Card *savedOtherCard = otherCard;
+                    if (isMatched) self.score += matchScore * MATCH_MODE_BONUS;
+                    self.score += matchScore * MATCH_BONUS;;
+                    card.matched = YES;
+                    otherCard.matched = YES;
+                    isMatched = YES;
                     
-                    int matchScore = [card match:@[otherCard]];
-                    if (matchScore) {
-                        self.score += matchScore * MATCH_BONUS;;
-                        card.matched = YES;
-                        otherCard.matched = YES;
-                    } else {
-                        self.score -= MISMATCH_PENALTY;
-                        otherCard.chosen = NO;
-                    }
-                    
-                    //Done if only matching on 2
-                    if (!self.matchMode3) break;
-                    NSLog(@"Mode 3: Checking 1st pair...");
-                    
-                    //2nd pass on a match on 3?
-                    if (firstPairChecked) {
-                        NSLog(@"Mode 3: Checking 2nd pair...");
-                        matchScore = [card match:@[savedOtherCard]];
-                        if (matchScore) {
-                            self.score += matchScore * MATCH_MODE_3_BONUS;;
-                            card.matched = YES;
-                            otherCard.matched = YES;
-                        } else {
-                            self.score -= MISMATCH_PENALTY;
-                            otherCard.chosen = NO;
-                        }
-
-                        break;
-                    }
- 
-                    //if matching on 3 cards, do an extra pass
-                    firstPairChecked = YES;
-                    
+                } else {
+                    self.score -= MISMATCH_PENALTY;
                 }
             }
-            self.score -= COST_TO_CHOOSE;
-            card.chosen = YES;
+            otherCard.chosen = NO;
         }
+        
+        card.chosen = NO;
         
     }
 }
@@ -113,8 +97,16 @@ static const int MATCH_MODE_3_BONUS = 10;
 }
 
 - (void)toggleMatchMode {
-    self.matchMode3 = !self.matchMode3;
+    self.numberMatchMode  = (self.numberMatchMode == MATCH_MODE_DEFAULT) ? MATCH_MODE_NUMBER : MATCH_MODE_DEFAULT;
+}
+
+- (NSInteger)findNumberCardsChosen {
+    int numberOfCardsChosen = 0;
     
+    for (Card *card in self.cards) {
+        if (card.chosen) numberOfCardsChosen++;
+    }
+    return numberOfCardsChosen;
 }
 
 - (void)resetGame {

@@ -20,6 +20,6 @@
 - (void)toggleMatchMode;
 
 @property (nonatomic, readonly) NSInteger score;
-@property (nonatomic, getter=isMatchMode3) BOOL matchMode3;
+@property (nonatomic, readonly) NSInteger numberMatchMode;
 
 @end
