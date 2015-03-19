@@ -56,16 +56,17 @@ static const int MATCH_MODE_NUMBER = 3;
 
     if (!card.isMatched) {
         
-        card.chosen = YES;
-        
         self.score -= COST_TO_CHOOSE;
         
         int numberOfCardsChosen = [self findNumberCardsChosen];
         
-        if (numberOfCardsChosen < self.numberMatchMode) return;
+        if (numberOfCardsChosen < self.numberMatchMode - 1) {
+            card.chosen = YES;
+            return;
+        }
 
         int matchScore = 0;
-        BOOL isMatched = NO;
+        BOOL hasMatched = NO;
         
         for (Card *otherCard in self.cards) {
             if (otherCard.isChosen && !otherCard.isMatched) {
@@ -73,15 +74,17 @@ static const int MATCH_MODE_NUMBER = 3;
                 matchScore += [card match:@[otherCard]];
                 if (matchScore) {
                     
-                    if (isMatched) self.score += matchScore * MATCH_MODE_BONUS;
+                    if (hasMatched) self.score += matchScore * MATCH_MODE_BONUS;
                     self.score += matchScore * MATCH_BONUS;;
                     card.matched = YES;
                     otherCard.matched = YES;
-                    isMatched = YES;
+                    hasMatched = YES;
                     
                 } else {
+                    
                     self.score -= MISMATCH_PENALTY;
                 }
+                
             }
             otherCard.chosen = NO;
         }
