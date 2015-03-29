@@ -46,7 +46,7 @@
 static const int MISMATCH_PENALTY = 2;
 static const int MATCH_BONUS = 4;
 static const int COST_TO_CHOOSE = 1;
-static const int MATCH_MODE_BONUS = 10;
+static const int MATCH_MODE_BONUS = 100;
 static const int MATCH_MODE_DEFAULT = 2;
 static const int MATCH_MODE_NUMBER = 3;
 
@@ -56,41 +56,61 @@ static const int MATCH_MODE_NUMBER = 3;
 
     if (!card.isMatched) {
         
-        self.score -= COST_TO_CHOOSE;
-        
-        int numberOfCardsChosen = [self findNumberCardsChosen];
-        
-        if (numberOfCardsChosen < self.numberMatchMode - 1) {
-            card.chosen = YES;
+        //if already chosen, flip it face down again
+        if (card.isChosen) {
+            card.chosen = NO;
             return;
         }
-
-        int matchScore = 0;
-        BOOL hasMatched = NO;
         
-        for (Card *otherCard in self.cards) {
-            if (otherCard.isChosen && !otherCard.isMatched) {
-                
-                matchScore += [card match:@[otherCard]];
-                if (matchScore) {
-                    
-                    if (hasMatched) self.score += matchScore * MATCH_MODE_BONUS;
-                    self.score += matchScore * MATCH_BONUS;;
-                    card.matched = YES;
-                    otherCard.matched = YES;
-                    hasMatched = YES;
-                    
-                } else {
-                    
-                    self.score -= MISMATCH_PENALTY;
-                }
-                
+        self.score -= COST_TO_CHOOSE;
+        
+        card.chosen = YES;
+        
+        if ([self findNumberCardsChosen] < self.numberMatchMode) return;
+        
+        NSMutableArray *chosenCards = [self findCardsChosen];
+
+        BOOL foundMatching = NO;
+        
+        //iterate and check all combinations
+        //first card against all other cards
+        //then second card against all other cards, etc
+        for (int i = 0; i < chosenCards.count; i++) {
+
+            
+            int matchScore = [self calculateScore:chosenCards];
+            if (matchScore) {
+                self.score += matchScore * MATCH_BONUS;
+                foundMatching = YES;
+            } else {
+                self.score -= MISMATCH_PENALTY;
             }
-            otherCard.chosen = NO;
+            
+            //don't check again if only 2 chosen cards
+            if (chosenCards.count == 2) break;
+            
+            [chosenCards addObject:chosenCards[0]];
+            [chosenCards removeObjectAtIndex:0];
+            
         }
         
-        card.chosen = NO;
-        
+        if (foundMatching) {
+            for (Card *chosenCard in chosenCards) {
+                chosenCard.matched = YES;
+            }
+            if (chosenCards.count > 2) self.score += MATCH_MODE_BONUS;
+            
+        } else {
+            for (Card *chosenCard in chosenCards) {
+                chosenCard.matched = NO;
+                chosenCard.chosen = NO;
+            }
+            card.chosen = YES;
+            
+        }
+
+
+
     }
 }
 
@@ -107,9 +127,37 @@ static const int MATCH_MODE_NUMBER = 3;
     int numberOfCardsChosen = 0;
     
     for (Card *card in self.cards) {
-        if (card.chosen) numberOfCardsChosen++;
+        if (card.chosen && !card.isMatched) numberOfCardsChosen++;
     }
     return numberOfCardsChosen;
+}
+
+
+- (NSMutableArray *)findCardsChosen {
+    NSMutableArray *cards = [[NSMutableArray alloc] init];
+    
+    for (Card *card in self.cards) {
+        if (card.chosen && !card.isMatched) {
+            [cards addObject:card];
+        }
+    }
+    return cards;
+}
+
+-(NSInteger)calculateScore:(NSArray *)cards {
+    if ([cards count] == 1) return 0;
+    
+    
+    NSRange theRange;
+    
+    theRange.location = 1;
+    theRange.length = [cards count] - 1;
+    
+    NSArray *otherChosenCards = [cards subarrayWithRange:theRange];
+    
+    int score = [cards[0] match:otherChosenCards];
+  
+    return (score + [self calculateScore:otherChosenCards]);
 }
 
 - (void)resetGame {
