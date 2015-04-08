@@ -12,6 +12,7 @@
 @property (nonatomic, readwrite) NSInteger score;
 @property (nonatomic, strong) NSMutableArray *cards; // of Card
 @property (nonatomic, readwrite) NSInteger numberMatchMode;
+@property (nonatomic, readwrite) NSMutableString *result;
 @end
 
 @implementation CardMatchingGame
@@ -54,11 +55,14 @@ static const int MATCH_MODE_NUMBER = 3;
 {
     Card *card = [self cardAtIndex:index];
 
+    self.result = [[NSMutableString alloc] init];
+    
     if (!card.isMatched) {
         
         //if already chosen, flip it face down again
         if (card.isChosen) {
             card.chosen = NO;
+            [self.result setString:@"Duh!"];
             return;
         }
         
@@ -66,9 +70,14 @@ static const int MATCH_MODE_NUMBER = 3;
         
         card.chosen = YES;
         
-        if ([self findNumberCardsChosen] < self.numberMatchMode) return;
-        
         NSMutableArray *chosenCards = [self findCardsChosen];
+        
+        for (Card *chosenCard in chosenCards) {
+            [self.result appendString:chosenCard.contents];
+            [self.result appendString:@" "];
+        }
+        
+        if ([self findNumberCardsChosen] < self.numberMatchMode) return;
 
         BOOL foundMatching = NO;
         
@@ -84,6 +93,7 @@ static const int MATCH_MODE_NUMBER = 3;
                 foundMatching = YES;
             } else {
                 self.score -= MISMATCH_PENALTY;
+                [self.result setString:@"No match !!"];
             }
             
             //don't check again if only 2 chosen cards
